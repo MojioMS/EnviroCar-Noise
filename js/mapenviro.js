@@ -4,10 +4,16 @@ var map;
 
 function initMap() {
   // set up the map
+  
   map = new google.maps.Map(document.getElementById('map-canvas'), {
-    center: new google.maps.LatLng(0, 0),
-    zoom: 2
-	
+    center: new google.maps.LatLng(51.963837, 7.616608),
+    zoom: 2,
+	minZoom: 4,
+	maxZoom: 16,
+	mapTypeControl: true,
+	scaleControl: true,
+	streetViewControl: false,
+	overviewMapControl: true
   });
   var styles = [
   {
@@ -28,10 +34,8 @@ function initMap() {
     stylers: [
       { visibility: "off" }
     ]
-  }
-];
-
-map.setOptions({styles: styles});
+  }];
+  map.setOptions({styles: styles});
 }
 
 /**
@@ -44,25 +48,139 @@ function loadGeoJsonString(geoString) {
   map.data.addGeoJson(geojson);
   map.data.setStyle(function(feature) {
 	try {
-		var rpm = feature.getProperty("phenomenons").Rpm.value == undefined? 0 : feature.getProperty("phenomenons").Rpm.value;
+		var rpm = feature.getProperty("phenomenons").Rpm.value;
+		var velocity = feature.getProperty("phenomenons").Speed.value;
+		var dBAvalue = dBA(velocity, rpm);
 	} catch(e) {
 	}
-	if (rpm<800){
+	if (dBAvalue<55){
 		return {icon:"images/green_dot.png"};}
-	else if ((rpm>=800) && (rpm<1200)) {
+	else if ((dBAvalue>=55) && (dBAvalue<65)) {
 		return {icon:"images/green_yellow_dot.png"};}
-	else if ((rpm>=1200) && (rpm<1600)) {
+	else if ((dBAvalue>=65) && (dBAvalue<70)) {
 		return {icon:"images/yellow_dot.png"};}
-	else if ((rpm>=1600) && (rpm<2000)) {
+	else if ((dBAvalue>=70) && (dBAvalue<75)) {
 		return {icon:"images/orange_dot.png"};}
-	else if ((rpm>=2000) && (rpm<2300)) {
+	else if ((dBAvalue>=75) && (dBAvalue<80)) {
 		return {icon:"images/orange_red_dot.png"};}
-	else if (rpm>=2300){
+	else if ((dBAvalue>=80) && (dBAvalue<85)) {
 		return {icon:"images/red_dot.png"};}
+	else if (dBAvalue>=85){
+		return {icon:"images/red_dark_dot.png"};}
 	else {
 		return {icon:"images/no_dot.png"};}
 	});
   zoom(map);
+} 
+
+
+// average (a+b)/2
+function avg(a,b){
+	return (a+b)/2;
+}
+
+/**
+* Main function for dB(A)~ velocity & rounds per minute
+*/
+function dBA(v,rpm){
+	var dbv = dBAv(v,rpm);
+	var dbr = dBArpm(v,rpm);
+	return avg(dbv,dbr);
+}
+
+//========== Functions for dB(A) ~ rounds per minute====
+
+function dB_rpm_i1(rpm){
+	return 0.0075*rpm+52.953;
+}
+
+function dB_rpm_i2(rpm,v){
+	return avg(0.0075*rpm+52.953,0.0038*rpm+63.142);
+}
+
+function dB_rpm_i3(rpm,v){
+	return avg(0.0038*rpm+63.142, 0.0023*rpm+69.13);
+}
+
+function dB_rpm_i4(rpm,v){
+	return avg(0.0023*rpm+69.13, 0.0011*rpm+75.567);
+}
+
+function dB_rpm_i5(rpm,v){
+	return avg(0.0023*rpm*69.13, 0.0005*rpm+79.62);
+}
+
+function dB_rpm_i6(v){
+	return 0.1739*v+63.941;
+}
+
+/**
+* function for dB(A) ~ rounds per minute
+*/
+function dBArpm(v,rpm){
+	if (v==0) {
+		return dB_rpm_i1(rpm);
+	} else if ((v>0) && (v<=30)){
+		return dB_rpm_i2(rpm,v);
+	} else if ((v>30) && (v<=50)){
+		return dB_rpm_i3(rpm,v);
+	} else if ((v>50) && (v<=70)){
+		return dB_rpm_i4(rpm,v);
+	} else if ((v>70) && (v<=100)){
+		return dB_rpm_i5(rpm,v);
+	}  else if (v>100){
+		return dB_rpm_i6(v);
+	}
+}
+
+//========== Functions for dB(A) ~ velocity=============
+
+function dB_v_i1(v){
+	return 0.2055*v+60.449;
+}
+
+function dB_v_i2(v,rpm){
+	return avg(0.2055*v+60.449,0.1739*v+63.941);
+}
+
+function dB_v_i3(v,rpm){
+	return avg(0.1739*v+63.941,0.1494*v+66.557);
+}
+
+function dB_v_i4(v,rpm){
+	return avg(0.1494*v+66.557, 0.0528*v+73.725);
+}
+
+function dB_v_i5(v,rpm){
+	return avg(0.0528*v+73.725, 0.0283*v+77.999);
+}
+
+function dB_v_i6(v){
+	return 0.0283*v+77.999;
+}
+
+/**
+* function for dB(A) ~ velocity 
+*/
+function dBAv(v,rpm){
+	if (v<=100){
+		if (rpm<=800) {
+			return dB_v_i1(v);
+		} else if ((rpm>800) && (rpm<=1500)){
+			return dB_v_i2(v,rpm);
+		} else if ((rpm>1500) && (rpm<=2000)){
+			return dB_v_i3(v,rpm);
+		} else if ((rpm>2000) && (rpm<=3000)){
+			return dB_v_i4(v,rpm);
+		} else if ((rpm>3000) && (rpm<=3500)){
+			return dB_v_i5(v,rpm);
+		} else if (rpm>3500){
+			return dB_v_i6(v);
+		}
+	}
+	else {
+		return dB_v_i2(v,rpm);
+	}
 }
 
 /**

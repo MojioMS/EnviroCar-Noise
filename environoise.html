@@ -1,7 +1,46 @@
 
 
 <!DOCTYPE html>
-<html>
+<html
+  <head>
+	<style>
+		ul {
+			list-style-type: none;
+			margin: 0;
+			padding: 0;
+			overflow: hidden;
+		}
+
+		li {
+			float: right;
+		}
+
+		a:link, a:visited {
+			display: block;
+			width: 120px;
+			font-weight: bold;
+			color: #FFFFFF;
+			background-color: #0065A0;
+			text-align: center;
+			padding: 4px;
+			text-decoration: none;
+			text-transform: uppercase;
+		}
+
+		a:hover, a:active {
+			background-color: #048A8F;
+		}
+	</style>
+ </head>
+  
+  <header>
+	 <nav>
+  		<img src="images/enciroCarNoise_logo.png" width="150" height="56"alt=""/>
+        <ul>
+            <li><a href="#about">About</a></li>
+        </ul>
+  	 </nav>
+  </header>
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
@@ -10,7 +49,11 @@
     <style type="text/css">
       html { height: 100% }
       body { height: 100%; margin: 50px; padding: 0; overflow: hidden; }
-      #map-canvas { height: 50% }
+      
+	  #map-body { height: 50%; width:80%}
+	  #map-canvas { height: 100%; width:70%; float: left}
+	  #legend { height: 100%; width: 30%; margin-left: auto; align: bottom}
+	  
       #drop-container {
         display: none;
         height: 100%;
@@ -36,8 +79,15 @@
     <script src="js/mapenviro.js"></script>
   </head>
   <body>
+  
+  <div id="map-body">
     <div id="map-canvas"></div>
-    <div id="drop-container"><div id="drop-silhouette"></div></div>
+    <div id="legend"><img src="images/legend.png" width="105" height="150" /></div>
+  </div>
+  
+<div id="drop-container"><div id="drop-silhouette"></div></div>
+    <footer> <p id="copyright">(c) Maurin Radtke, Sergey Mukhametov</p> 
+    </footer>
   </body>
 </html>
 
