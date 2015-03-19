@@ -1,10 +1,10 @@
 /* Map functions */
-
 var map;
 
 function initMap() {
   // set up the map
-  
+  geocoder = new google.maps.Geocoder();
+  var latlng = new google.maps.LatLng(51.963837, 7.616608);
   map = new google.maps.Map(document.getElementById('map-canvas'), {
     center: new google.maps.LatLng(51.963837, 7.616608),
     zoom: 2,
@@ -37,6 +37,7 @@ function initMap() {
   }];
   map.setOptions({styles: styles});
 }
+
 
 /**
 * Loads a geoString and adds the measurements onto the map colored by noise level. 
@@ -83,8 +84,8 @@ function avg(a,b){
 * Main function for dB(A)~ velocity & rounds per minute
 */
 function dBA(v,rpm){
-	var dbv = dBAv(v,rpm);
-	var dbr = dBArpm(v,rpm);
+	var dbv = rollingNoise(v,rpm);
+	var dbr = propulsionNoise(v,rpm);
 	return avg(dbv,dbr);
 }
 
@@ -95,19 +96,19 @@ function dB_rpm_i1(rpm){
 }
 
 function dB_rpm_i2(rpm,v){
-	return avg(0.0075*rpm+52.953,0.0038*rpm+63.142);
+	return (0.0075*rpm+52.953+(v/30)*((0.0075-0.0038)*rpm+(52.953-63.142)));
 }
 
 function dB_rpm_i3(rpm,v){
-	return avg(0.0038*rpm+63.142, 0.0023*rpm+69.13);
+	return (0.0038*rpm+63.142+((v-30)/(50-30))*((0.0038-0.0023)*rpm+(63.142-69.13)));
 }
 
 function dB_rpm_i4(rpm,v){
-	return avg(0.0023*rpm+69.13, 0.0011*rpm+75.567);
+	return (0.0023*rpm+69.13+((v-50)/(70-50))*((0.0023-0.0011)*rpm+(69.13-75.567)));
 }
 
 function dB_rpm_i5(rpm,v){
-	return avg(0.0023*rpm*69.13, 0.0005*rpm+79.62);
+	return (0.0011*rpm+75.567+((v-70)/(100-70))*((0.0011-0.0005)*rpm+(75.567-79.62)));
 }
 
 function dB_rpm_i6(v){
@@ -117,7 +118,7 @@ function dB_rpm_i6(v){
 /**
 * function for dB(A) ~ rounds per minute
 */
-function dBArpm(v,rpm){
+function propulsionNoise(v,rpm){
 	if (v==0) {
 		return dB_rpm_i1(rpm);
 	} else if ((v>0) && (v<=30)){
@@ -140,29 +141,29 @@ function dB_v_i1(v){
 }
 
 function dB_v_i2(v,rpm){
-	return avg(0.2055*v+60.449,0.1739*v+63.941);
+	return (0.2055*v+60.449+((rpm-800)/(1500-800))*((0.2055-0.1739)*v+(60.449-63.941)));
 }
 
 function dB_v_i3(v,rpm){
-	return avg(0.1739*v+63.941,0.1494*v+66.557);
+	return (0.1739*v+63.941+((rpm-1500)/(2000-1500))*((0.1739-0.1494)*v+(63.941-66.557)));
 }
 
 function dB_v_i4(v,rpm){
-	return avg(0.1494*v+66.557, 0.0528*v+73.725);
+	return (0.1494*v+66.557+((rpm-2000)/(3000-2000))*((0.1494-0.0528)*v+(66.557-73.725)));
 }
 
 function dB_v_i5(v,rpm){
-	return avg(0.0528*v+73.725, 0.0283*v+77.999);
+	return (0.0528*v+73.725+((rpm-3000)/(3500-3000))*((0.0528-0.0283)*v+(73.725-77.999)));
 }
 
 function dB_v_i6(v){
-	return 0.0283*v+77.999;
+	return 0.1739*v+63.941;
 }
 
 /**
 * function for dB(A) ~ velocity 
 */
-function dBAv(v,rpm){
+function rollingNoise(v,rpm){
 	if (v<=100){
 		if (rpm<=800) {
 			return dB_v_i1(v);
